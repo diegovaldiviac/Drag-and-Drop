@@ -33,7 +33,8 @@ class App extends React.Component {
       complete: [],
       tagInput: '',
       titleInput: '',
-      descriptionInput: ''
+      descriptionInput: '',
+      checked: false
     }
   };
 
@@ -108,11 +109,15 @@ class App extends React.Component {
   // Meta description handlers
 
   handleTitleInput = (ev) => {
-    this.setState({ titleInput: ev.target.value })
+    this.setState({ titleInput: ev.target.value });
   }
 
   handleDescriptionInput = (ev) => {
-    this.setState({ descriptionInput: ev.target.value })
+    this.setState({ descriptionInput: ev.target.value });
+  }
+
+  handleCheckBox = (ev) => {
+    this.setState({ checked: ev.target.checked});
   }
 
   //-----------------------------------------------------------
@@ -121,8 +126,12 @@ class App extends React.Component {
     localStorage.setItem('Labels', JSON.stringify(this.state.complete));
     localStorage.setItem('Title', JSON.stringify(this.state.titleInput));
     localStorage.setItem('Description', JSON.stringify(this.state.descriptionInput));
-    document.getElementById('titleText').value = '';
-    document.getElementById('descriptionText').value = '';
+    localStorage.setItem('Threat', JSON.stringify(this.state.checked));
+
+    this.setState({ descriptionInput: ''});
+    this.setState({ titleInput: ''});
+    this.setState({ checked: false});
+
     alert('sumbited');
   }
 
@@ -179,9 +188,16 @@ class App extends React.Component {
             <Grid className={classes.innerGrid} item xs={4}>
               <Grid className={classes.column} >
                 <TextField id="titleText" label="Title" variant="outlined"
-                onChange={(e) => this.handleTitleInput(e)}/>
-                <textarea id='descriptionText' name='description' rows={20} cols={20} 
-                onChange={(e) => this.handleDescriptionInput(e)}/>
+                onChange={(e) => this.handleTitleInput(e)} value={this.state.titleInput}/>
+                <div>
+                <textarea id='descriptionText' name='description' rows={10} cols={40} 
+                onChange={(e) => this.handleDescriptionInput(e)} value={this.state.descriptionInput}/>
+                </div>
+                <label>
+                  <input id='threatChecked' type='checkbox' 
+                  checked={this.state.checked} onChange={(e) => this.handleCheckBox(e)}/>
+                  <span> Threat </span>
+                </label>
               </Grid>
             </Grid>
           </Grid>
