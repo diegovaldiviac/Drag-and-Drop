@@ -24,7 +24,6 @@ const SecurSamplerStyles = {
     justifyContent: 'space-around',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
   },
 
   column: {
@@ -37,27 +36,7 @@ const SecurSamplerStyles = {
   droppable: {
     width: 400,
     height: 300,
-    //border: "solid 1px orange"
-  },
-
-  
-
-  insideList: {
-    backgroundColor: "white",
-    width: 200,
-    display: 'inline-grid',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  tagArea: {
-    height: "500px",
-    border: "solid 1px #555",
-    backgroundColor: "#eee",
-    color: "#555",
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    border: "solid 1px black"
   },
 
   tag: {
@@ -71,13 +50,6 @@ const SecurSamplerStyles = {
     justifyContent: 'center',
     backgroundColor:'lightblue', 
     fontSize:'20px'
-  },
-
-  taskheader: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    
   },
 
   listStyle: {
