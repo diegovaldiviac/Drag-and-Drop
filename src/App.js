@@ -10,7 +10,9 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-
+      selectedFile: null,
+      isFileSelected: false,
+      imagePreviewUrl: "",
       // backend pobla esta lista inicialmente vacida
       labels: [
           {name:'Powder', id: 1},
@@ -34,7 +36,8 @@ class App extends React.Component {
       tagInput: '',
       titleInput: '',
       descriptionInput: '',
-      checked: false
+      isThreat: false,
+      isZoom: false
     }
   };
 
@@ -116,23 +119,54 @@ class App extends React.Component {
     this.setState({ descriptionInput: ev.target.value });
   }
 
-  handleCheckBox = (ev) => {
-    this.setState({ checked: ev.target.checked});
+  handleThreatCheck = (ev) => {
+    this.setState({ isThreat: ev.target.checked});
+  }
+
+  handleZoomCheck = (ev) => {
+    this.setState({ isZoom: ev.target.checked});
   }
 
   //-----------------------------------------------------------
+  // File upload
+
+  handleFileChange = (ev) => {
+    ev.preventDefault();
+    let reader = new FileReader();
+    let inFile = ev.target.files[0]
+    reader.onloadend = () => {
+      this.setState({ 
+        selectedFile: inFile, isFileSelected: true, imagePreviewUrl: reader.result 
+      });
+    }
+    reader.readAsDataURL(inFile);
+  }
+
+
+
+
+    //-----------------------------------------------------------
   // Local storage
   handleSumbitData = () => {
-    localStorage.setItem('Labels', JSON.stringify(this.state.complete));
-    localStorage.setItem('Title', JSON.stringify(this.state.titleInput));
-    localStorage.setItem('Description', JSON.stringify(this.state.descriptionInput));
-    localStorage.setItem('Threat', JSON.stringify(this.state.checked));
 
-    this.setState({ descriptionInput: ''});
-    this.setState({ titleInput: ''});
-    this.setState({ checked: false});
+    // Check if a file has been uploaded
+    if (this.state.isFileSelected) {
+      localStorage.setItem('Image', JSON.stringify(this.state.imagePreviewUrl));
+      localStorage.setItem('Labels', JSON.stringify(this.state.complete));
+      localStorage.setItem('Title', JSON.stringify(this.state.titleInput));
+      localStorage.setItem('Description', JSON.stringify(this.state.descriptionInput));
+      localStorage.setItem('Threat', JSON.stringify(this.state.checked));
+      localStorage.setItem('Zoom', JSON.stringify(this.state.isZoom));
+      
+      this.setState({ 
+        descriptionInput: '', titleInput: '', isThreat: false, 
+        isFileSelected: false, isZoom: false
+      });
+      alert('sumbited');
 
-    alert('sumbited');
+    } else {
+      alert('Select a File to sumbit');
+    }
   }
 
 
@@ -156,11 +190,23 @@ class App extends React.Component {
         </h2>
         <Grid className={classes.outerGrid} container spacing={2}>
           <Grid className={classes.innerGrid} item xs={4}>
-              <div className={classes.droppable}
-                onDragOver={(e)=>this.handleDragOver(e)}
-                onDrop={(e)=>this.handleOnDrop(e)}>
-                Target
-              </div>
+            <Grid className={classes.column} >
+              {this.state.isFileSelected ? (
+                <div className={classes.droppable}
+                  onDragOver={(e)=>this.handleDragOver(e)}
+                  onDrop={(e)=>this.handleOnDrop(e)}>
+                    <img 
+                    src={this.state.imagePreviewUrl}
+                    width={400} height={300}
+                    alt="..." style={{objectFit: 'cover'}}
+                    />
+                </div>
+              ) : (
+                <p>Select a file</p>
+              )}
+              <input type='file' accept='image/*' id='button-file' onChange={(e) => this.handleFileChange(e)}>
+              </input>
+            </Grid>
           </Grid>
           <Grid className={classes.innerGrid} item xs={4}>
             <Grid className={classes.column} >
@@ -195,8 +241,11 @@ class App extends React.Component {
                 </div>
                 <label>
                   <input id='threatChecked' type='checkbox' 
-                  checked={this.state.checked} onChange={(e) => this.handleCheckBox(e)}/>
+                  checked={this.state.isThreat} onChange={(e) => this.handleThreatCheck(e)}/>
                   <span> Threat </span>
+                  <input id='zoomChecked' type='checkbox'
+                  checked={this.state.isZoom} onChange={(e) => this.handleZoomCheck(e)}/>
+                  <span> Zoom View </span>
                 </label>
               </Grid>
             </Grid>

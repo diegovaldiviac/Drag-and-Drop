@@ -35,10 +35,9 @@ const SecurSamplerStyles = {
   },
 
   droppable: {
-    backgroundcolor: "grey",
     width: 400,
     height: 300,
-    border: "solid 1px orange"
+    //border: "solid 1px orange"
   },
 
   
