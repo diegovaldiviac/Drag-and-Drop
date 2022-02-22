@@ -23,7 +23,7 @@ const SecurSamplerStyles = {
     //border: "solid 1px green",
     justifyContent: 'space-around',
     display: 'flex',
-    alignItems: 'center',
+    //alignItems: 'center',
   },
 
   column: {

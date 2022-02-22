@@ -3,17 +3,26 @@ import React from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import Styles from './Style';
 import Logo from './MicrosoftTeams-image.png'
+import FlashMessage from './components/flash-message'
+//import axois from 'axios';
  
+
+const SnackbarType = {
+  success: "success",
+  fail: "error",
+  warning: 'warning'
+};
+
 class App extends React.Component {
 
 
   constructor(props) {
     super(props);
+    this.messageRef = React.createRef();
     this.state = {
       selectedFile: null,
       isFileSelected: false,
       imagePreviewUrl: "",
-      // backend pobla esta lista inicialmente vacida
       labels: [
           {name:'Powder', id: 1},
           {name:'Gun', id: 2},
@@ -45,10 +54,8 @@ class App extends React.Component {
   //-----------------------------------------------------------
   // Drag function handelers
   handleDragStart = (ev, id) => {
-    console.log('dragstart:', id);
     ev.dataTransfer.effectAllowed = 'move';
     ev.dataTransfer.setData("id", id);
-    
   };
 
   handleDragOver = (ev) => {
@@ -68,11 +75,12 @@ class App extends React.Component {
      */
     if (newComplete.indexOf(id) === -1) {
       newComplete.push(id);
-      alert(id + ' label assigned to this image');
+      this.messageRef.current
+      .show(id + ' label has been assinged', SnackbarType.success)
       // checking repition 
     } else if (newComplete.indexOf(id) > -1) {
-      alert('¡Warning!');
-      alert(id + ' has already been assigned to this image');
+      this.messageRef.current
+      .show(id + ' has already been assigned to this picture', SnackbarType.warning)
     }
     this.setState({ complete: newComplete });
   };
@@ -109,7 +117,7 @@ class App extends React.Component {
   }
 
   //-----------------------------------------------------------
-  // Meta description handlers
+  // Meta Data handlers
 
   handleTitleInput = (ev) => {
     this.setState({ titleInput: ev.target.value });
@@ -148,9 +156,26 @@ class App extends React.Component {
     //-----------------------------------------------------------
   // Local storage
   handleSumbitData = () => {
+    // create an object of form data
+    const formData = new FormData();
+    // request made to the backend file
+    // send formData object
+    //axois.post("api/uploadFile", formData);
 
     // Check if a file has been uploaded
-    if (this.state.isFileSelected) {
+
+    if (!this.state.isFileSelected) { 
+      this.messageRef.current.show('Please select a file', SnackbarType.fail)
+    }
+    else if (this.state.titleInput.length === 0) {
+      this.messageRef.current.show('Missing a title', SnackbarType.warning)
+    } else {
+      // Update the formData object
+      formData.append(
+        "File",
+        this.state.selectedFile,
+        this.state.selectedFile.name
+      );
       localStorage.setItem('Image', JSON.stringify(this.state.imagePreviewUrl));
       localStorage.setItem('Labels', JSON.stringify(this.state.complete));
       localStorage.setItem('Title', JSON.stringify(this.state.titleInput));
@@ -159,13 +184,10 @@ class App extends React.Component {
       localStorage.setItem('Zoom', JSON.stringify(this.state.isZoom));
       
       this.setState({ 
-        descriptionInput: '', titleInput: '', isThreat: false, 
-        isFileSelected: false, isZoom: false
+        descriptionInput: '', titleInput: '', isThreat: false, isZoom: false,
+        isFileSelected: false, selectedFile: null, imagePreviewUrl: ""
       });
-      alert('sumbited');
-
-    } else {
-      alert('Select a File to sumbit');
+      this.messageRef.current.show('Submited!', SnackbarType.success)
     }
   }
 
@@ -262,6 +284,7 @@ class App extends React.Component {
               </Button>
             </Grid>
           </Grid>
+          <FlashMessage ref={this.messageRef}/>
       </div>
     );
   }
