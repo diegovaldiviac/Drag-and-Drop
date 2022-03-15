@@ -5,7 +5,7 @@ import Styles from './Style';
 import Logo from './MicrosoftTeams-image.png'
 import FlashMessage from './components/flash-message'
 //import axois from 'axios';
- 
+
 
 const SnackbarType = {
   success: "success",
@@ -18,7 +18,22 @@ class App extends React.Component {
 
   constructor(props) {
     super(props);
-    this.messageRef = React.createRef();
+    this.messageRef             = React.createRef();
+    this.floatingDNDRef         = React.createRef();
+    this.handleDragStart        = this.handleDragStart.bind( this );
+    this.handleDragOver         = this.handleDragOver.bind( this );
+    this.handleOnDrop           = this.handleOnDrop.bind( this );
+    this.handleTagInput         = this.handleTagInput.bind( this) ;
+    this.handleAddClick         = this.handleAddClick.bind( this );
+    this.handleTitleInput       = this.handleTitleInput.bind( this );
+    this.handleZoomCheck        = this.handleZoomCheck.bind( this );
+    this.handleSumbitData       = this.handleSumbitData.bind( this );
+    this.handleDescriptionInput = this.handleDescriptionInput.bind( this );
+    this.handleThreatCheck      = this.handleThreatCheck.bind( this );
+    this.handleZoomCheck        = this.handleZoomCheck.bind( this );
+    this.handleOnTouchEnd       = this.handleOnTouchEnd.bind( this );
+    this.handleOnTouchStart     = this.handleOnTouchStart.bind (this );
+    this.handleOnTouchMove      = this.handleOnTouchMove.bind( this );
     this.state = {
       selectedFile: null,
       isFileSelected: false,
@@ -52,24 +67,20 @@ class App extends React.Component {
 
   // Handle Event Functions
   //-----------------------------------------------------------
-  // Drag function handelers
-  handleDragStart = (ev, id) => {
+  // Mouse DragnDrop function handelers
+  handleDragStart(ev, id) {
     ev.dataTransfer.effectAllowed = 'move';
     ev.dataTransfer.setData("id", id);
   };
 
-  handleDragOver = (ev) => {
+  handleDragOver(ev) {
     ev.preventDefault();
   }
 
-  handleOnDrop = (ev) => {
-
+  handleOnDrop(ev) {
     let id = ev.dataTransfer.getData("id");
-    console.log('item recieved:', id);
-
     // TODO copia
-    let newComplete = [... this.state.complete];
-
+    let newComplete = [...this.state.complete];
     /**
      * Handle repetition of assigned labels
      */
@@ -77,22 +88,90 @@ class App extends React.Component {
       newComplete.push(id);
       this.messageRef.current
       .show(id + ' label has been assinged', SnackbarType.success)
-      // checking repition 
+      // checking repition
     } else if (newComplete.indexOf(id) > -1) {
       this.messageRef.current
       .show(id + ' has already been assigned to this picture', SnackbarType.warning)
     }
     this.setState({ complete: newComplete });
   };
+  //----------------------------------------------------------
+  // Touch DragnDrop handlers
+  handleOnTouchStart(e) {
+    this.floatingDNDRef.current.hidden = false
+    this.floatingDNDRef.current.innerText = e.currentTarget.innerText
 
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect()
+
+    this.floatingDNDRef.current.style.width = `${width}px`
+    this.floatingDNDRef.current.style.height = `${height}px`
+    this.floatingDNDRef.current.style.left = `${left}px`
+    this.floatingDNDRef.current.style.top = `${top}px`
+  }
+
+  handleOnTouchMove(e) {
+
+    // VIEW SQUARE DIMENSION
+    const x = e.targetTouches[0].clientX
+    const y = e.targetTouches[0].clientY
+
+    const xOffset = this.floatingDNDRef.current.offsetWidth / 2
+    const yOffset = this.floatingDNDRef.current.offsetHeight / 2
+
+    this.floatingDNDRef.current.style.left = `${x - xOffset}px`
+    this.floatingDNDRef.current.style.top = `${y - yOffset}px`
+  }
+
+
+  handleOnTouchEnd(e) {
+    // copy of complete list
+    const newComplete = [...this.state.complete];
+
+    // Horizontal and Vertical distance from component and father div
+    let x = Math.round(this.floatingDNDRef.current.offsetLeft)
+    let y = Math.round(this.floatingDNDRef.current.offsetTop)
+
+    const xOffset = this.floatingDNDRef.current.offsetWidth / 2
+    const yOffset = this.floatingDNDRef.current.offsetHeight / 2
+
+    // distance from the center of the element to its div
+    // this is to verify where we are dropping the center
+    x += xOffset
+    y += yOffset
+
+    // hoveredElemnts is the current element in x y
+    const hoveredElements = document.elementsFromPoint(x, y)
+
+    // Are we over the thzDisplay?
+    if (hoveredElements.some((item) => item.id === 'tHzDisplay-1')) {
+      const id = e.currentTarget.innerText
+      if (newComplete.indexOf(id) === -1) {
+        console.log('im here')
+        newComplete.push(id);
+        this.messageRef.current
+        .show(id + ' label has been assinged', SnackbarType.success)
+        // checking repition
+      } else if (newComplete.indexOf(id) > -1) {
+        this.messageRef.current
+        .show(id + ' has already been assigned to this picture', SnackbarType.warning)
+      }
+    }
+
+    this.setState({ complete: newComplete });
+    // Clean ref for next touch drag
+    this.floatingDNDRef.current.innerText = ''
+    this.floatingDNDRef.current.style.left = '0px'
+    this.floatingDNDRef.current.style.top = '0px'
+    this.floatingDNDRef.current.hidden = true
+  }
 
   //-----------------------------------------------------------
   // Tag input handlers
-  handleTagInput = (ev) => {
+  handleTagInput(ev) {
     this.setState({ tagInput: ev.target.value })
   }
 
-  handleAddClick = () => {
+  handleAddClick() {
     let input = [...this.state.tagInput];
     let newLabels = [...this.state.labels];
 
@@ -103,13 +182,13 @@ class App extends React.Component {
     if (input.join("") !== '') {
       let nameList = (newLabels.map(function(label) {
         return label.name.toUpperCase();
-      }))   
+      }))
       if (nameList.indexOf(input.join("").toUpperCase()) === -1) {
         // Currently giving it a random id
         // Pablo has id's set up in the backend
         newLabels.push({name: input.join(""), id: Math.random()})
       }
-  } 
+  }
 
     this.setState({ labels: newLabels })
     document.getElementById('tag').value = '';
@@ -119,32 +198,32 @@ class App extends React.Component {
   //-----------------------------------------------------------
   // Meta Data handlers
 
-  handleTitleInput = (ev) => {
+  handleTitleInput(ev) {
     this.setState({ titleInput: ev.target.value });
   }
 
-  handleDescriptionInput = (ev) => {
+  handleDescriptionInput(ev) {
     this.setState({ descriptionInput: ev.target.value });
   }
 
-  handleThreatCheck = (ev) => {
+  handleThreatCheck(ev) {
     this.setState({ isThreat: ev.target.checked});
   }
 
-  handleZoomCheck = (ev) => {
+  handleZoomCheck(ev) {
     this.setState({ isZoom: ev.target.checked});
   }
 
   //-----------------------------------------------------------
   // File upload
 
-  handleFileChange = (ev) => {
+  handleFileChange(ev) {
     ev.preventDefault();
     let reader = new FileReader();
     let inFile = ev.target.files[0]
     reader.onloadend = () => {
-      this.setState({ 
-        selectedFile: inFile, isFileSelected: true, imagePreviewUrl: reader.result 
+      this.setState({
+        selectedFile: inFile, isFileSelected: true, imagePreviewUrl: reader.result
       });
     }
     reader.readAsDataURL(inFile);
@@ -155,7 +234,7 @@ class App extends React.Component {
 
     //-----------------------------------------------------------
   // Local storage
-  handleSumbitData = () => {
+  handleSumbitData() {
     // create an object of form data
     const formData = new FormData();
     // request made to the backend file
@@ -164,7 +243,7 @@ class App extends React.Component {
 
     // Check if a file has been uploaded
 
-    if (!this.state.isFileSelected) { 
+    if (!this.state.isFileSelected) {
       this.messageRef.current.show('Please select a file', SnackbarType.fail)
     }
     else if (this.state.titleInput.length === 0) {
@@ -182,8 +261,8 @@ class App extends React.Component {
       localStorage.setItem('Description', JSON.stringify(this.state.descriptionInput));
       localStorage.setItem('Threat', JSON.stringify(this.state.checked));
       localStorage.setItem('Zoom', JSON.stringify(this.state.isZoom));
-      
-      this.setState({ 
+
+      this.setState({
         descriptionInput: '', titleInput: '', isThreat: false, isZoom: false,
         isFileSelected: false, selectedFile: null, imagePreviewUrl: ""
       });
@@ -203,10 +282,23 @@ class App extends React.Component {
     // - Sorted alphabetetically
     // - Mapped into draggable div components
 
-    const { classes } = this.props;  
+    const { classes } = this.props;
     return (
 
-      <div className="container-drag">
+      <div className="container-drag" width='100vh'>
+
+        <div
+          ref={this.floatingDNDRef}
+          style={{
+            backgroundImage: "radial-gradient(white, transparent)",
+            padding: '1rem',
+            color: 'black',
+            position: 'fixed', zIndex: 4
+          }}
+          hidden={true}
+        >
+        </div>
+
         <h2 style={{ backgroundColor: 'black'}} >
           <img src={Logo} alt="Logo"/>
         </h2>
@@ -217,7 +309,8 @@ class App extends React.Component {
                 <div className={classes.droppable}
                   onDragOver={(e)=>this.handleDragOver(e)}
                   onDrop={(e)=>this.handleOnDrop(e)}>
-                    <img 
+                    <img
+                    id='thzDisplay-1'
                     src={this.state.imagePreviewUrl}
                     width={400} height={300}
                     alt="..." style={{objectFit: 'cover'}}
@@ -245,6 +338,9 @@ class App extends React.Component {
                 .map((item) => (
                   <div className={classes.tag}
                     onDragStart={(e) => this.handleDragStart(e, item.name)}
+                    onTouchEnd={(e)=>this.handleOnTouchEnd(e)}
+                    onTouchStart={(e)=>this.handleOnTouchStart(e)}
+                    onTouchMove={(e)=>this.handleOnTouchMove(e)}
                     key={item.id}
                     draggable>
                       {item.name}
@@ -258,11 +354,11 @@ class App extends React.Component {
                 <TextField id="titleText" label="Title" variant="outlined"
                 onChange={(e) => this.handleTitleInput(e)} value={this.state.titleInput}/>
                 <div>
-                <textarea id='descriptionText' name='description' rows={10} cols={40} 
+                <textarea id='descriptionText' name='description' rows={10} cols={40}
                 onChange={(e) => this.handleDescriptionInput(e)} value={this.state.descriptionInput}/>
                 </div>
                 <label>
-                  <input id='threatChecked' type='checkbox' 
+                  <input id='threatChecked' type='checkbox'
                   checked={this.state.isThreat} onChange={(e) => this.handleThreatCheck(e)}/>
                   <span> Threat </span>
                   <input id='zoomChecked' type='checkbox'
